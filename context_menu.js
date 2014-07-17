@@ -15,9 +15,11 @@
     var 
       selector   = this,
       opts       = opts||{},
+      style      = opts.style||true,
       items      = opts.items||[],
       iconClass  = opts.iconClass||'icomoon',
       menu       = createMenu(items),
+      highlight  = opts.highlight||"#E2E1FC",
       menuStyles = $.create('style', {
         type: 'text/css',
         id: 'context-menu-style',
@@ -25,17 +27,19 @@
           box-shadow:0px 1px 5px 1px #dcdcdc; z-index:100; }\
         .context-menu *{ padding:0; margin:0; list-style:none; }\
         .context-menu ul li:not(:last-of-type){ border-bottom:solid 1px #dcdcdc; }\
-        .context-menu ul li{ padding:5px; padding-right:30px; position:relative; }\
+        .context-menu ul li{ padding:5px; padding-right:30px; position:relative; white-space:nowrap; }\
         .context-menu ul li:hover{ background:#acacac; }"
       })
     ;
+    document.addEventListener('click', function(){$('.context-menu').hide()})
     $(selector).bind('contextmenu', function(e){ e.preventDefault(); return false; })
-    if(document.querySelector('#context-menu-style') == null){ document.head.appendChild(menuStyles) }
+    if(document.querySelector('#context-menu-style') == null && style){ document.head.appendChild(menuStyles) }
     $(selector).each(function(ind, ele){
+      $(ele)[0].origBackground = $(ele).css('background-color')
       $(ele).mousedown(function(e){ 
-        $(selector).css({backgroundColor: ''})
+        $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         if( e.button == 2 ){ 
-          $(ele).css({backgroundColor: "#E2E1FC"})
+          $(ele).css({backgroundColor: highlight})
           $(menu).css({display: 'inline-block'}).offset({top: e.pageY, left: e.pageX})
           bindMenuEvents(items, ele)
         }else{
@@ -57,7 +61,7 @@
         var 
           itemID   = Math.round(Math.random(1000)*10000),
           item     = $.create('li', {className: 'view clickable', id: 'context-menu-'+itemID+'-'+menuID}),
-          styles   = (ele.icon ? {marginRight: '10px'} : {marginRight: '10px', opacity: 0})
+          styles   = (ele.icon ? {textAlign: 'center', marginRight: '10px', fontSize: '12px', width: '12px', display: 'inline-block'} : {textAlign: 'center', marginRight: '10px', opacity: 0, fontSize: '12px', width: '12px', display: 'inline-block'})
         ;
         if(ele.iconURL){
           var itemIcon = $.create('span', {className: iconClass, styles: {marginRight: '10px'}})
@@ -70,8 +74,12 @@
         item.appendChild($.create('span', {innerHTML: ele.name}))
         if(ele.menu){ 
           var icon = $.create('span', {
-            className: iconClass, innerHTML: '&#xe70a;',
-            styles: {position:'absolute', right: '3px', top: '7px', color: '#acacac'}
+            className: iconClass, styles: {
+              position:'absolute', right: '3px', top: '50%', marginTop: '-5px',
+              width: 0, height: 0, borderBottom: '5px solid transparent',
+              borderTop: '5px solid transparent', borderLeft: '5px solid #acacac',
+              fontSize: 0, lineHeight: 0
+            }
           })
           item.appendChild(icon)
           createMenu(ele.menu, item) 
@@ -107,7 +115,7 @@
         $(menuItem.selector).unbind('click').click(function(){
           if(menuItem.clickEvent){ menuItem.clickEvent(clicked) }
           $(menuItem.selector).closest('.context-menu').hide()
-          $(selector).css({backgroundColor: ''})
+          $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         })
         if(menuItem.menuItems){ bindMenuEvents(menuItem.menu, clicked) }
       })
@@ -115,3 +123,4 @@
     return this
   }
 }(jQuery))
+Array.prototype.each=function(yield){ for(var x = 0; x < this.length; x++){ if(typeof(yield(x, this[x])) == 'boolean'){ break }}}

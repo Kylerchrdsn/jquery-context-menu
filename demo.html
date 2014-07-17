@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Context Menu</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="context_menu.js"></script>
+    <style type="text/css">
+      @import url(http://weloveiconfonts.com/api/?family=fontawesome);
+      .fontawesome{ font-family: 'FontAwesome', sans-serif; }
+    </style>
+  </head>
+  <body>
+    <div id='demo' style="color:white; background:black; display:inline; padding:5px; font-weight:bold;">
+      Cogito igitur sum
+    </div>
+
+    <script type="text/javascript">
+      $('#demo').contextMenu({
+        iconClass: 'fontawesome',
+        highlight: 'black',
+        items: [
+          {name: 'Item 1', icon: 'f0e7'},
+          {name: 'Item 2', icon: 'f083'},
+          {name: 'Item 3', icon: 'f05b'},
+          {name: 'Item 4', icon: 'f09d', menu: [
+            {name: 'Item 1'},
+            {name: 'Item 2'}
+          ]},
+          {name: 'Item 5'}
+        ]
+      })
+    </script>
+  </body>
+</html>
