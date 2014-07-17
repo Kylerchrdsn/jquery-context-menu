@@ -1,4 +1,6 @@
 (function($){
+  $.extend(Array.prototype, {each: function(yield){ for(var x = 0; x < this.length; x++){ if(typeof(yield(x, this[x])) == 'boolean'){ break }}}})
+  
   $.create=function(tag, options){
     var options    = options||{}
     options.styles = options.styles||{}
@@ -123,4 +125,3 @@
     return this
   }
 }(jQuery))
-Array.prototype.each=function(yield){ for(var x = 0; x < this.length; x++){ if(typeof(yield(x, this[x])) == 'boolean'){ break }}}
