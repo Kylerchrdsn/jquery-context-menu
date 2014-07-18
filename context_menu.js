@@ -56,7 +56,14 @@
         $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         if( e.button == 2 ){ 
           $(ele).css({backgroundColor: highlight})
-          $(menu).css({display: 'inline-block'}).offset({top: e.pageY, left: e.pageX}).css({display: 'none'}).slideDown(300)
+          $(menu).css({display: 'inline-block'})
+          var winWidth = window.innerWidth
+          var menuLeft = e.pageX+menu.offsetWidth
+          var left     = e.pageX
+          if(menuLeft>winWidth){ left -= menu.offsetWidth }
+          $(menu).offset({
+            top: e.pageY, left: left
+          }).css({display: 'none'}).slideDown(300)
           bindMenuEvents(items, ele)
         }else{
           $(menu).fadeOut(300)
@@ -110,9 +117,14 @@
         return subMenu
       }else{
         $(bindToElement).unbind('mouseenter').bind('mouseenter', function(){
-          $(subMenu).css({display: 'inline-block'}).offset({
+          $(subMenu).css({display: 'inline-block'})
+          var winWidth  = window.innerWidth
+          var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
+          var left      = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
+          if(winWidth<menuright){ left -= ($(bindToElement)[0].offsetWidth+subMenu.offsetWidth) }
+          $(subMenu).offset({
             top: $(bindToElement).offset().top, 
-            left: $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
+            left: left
           })
         }).unbind('mouseleave').bind('mouseleave', function(){
           $(subMenu).fadeOut(300)
