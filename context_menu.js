@@ -1,6 +1,6 @@
 (function($){
   $.extend(Array.prototype, {each: function(yield){ for(var x = 0; x < this.length; x++){ if(typeof(yield(x, this[x])) == 'boolean'){ break }}}})
-  
+
   $.create=function(tag, options){
     var options    = options||{}
     options.styles = options.styles||{}
@@ -30,10 +30,13 @@
         .context-menu *{ padding:0; margin:0; list-style:none; }\
         .context-menu ul li:not(:last-of-type){ border-bottom:solid 1px #dcdcdc; }\
         .context-menu ul li{ padding:5px; padding-right:30px; position:relative; white-space:nowrap; }\
-        .context-menu ul li:hover{ background:#acacac; }"
+        .context-menu ul li.hover:hover{ background:#acacac; }"
       })
     ;
-    document.addEventListener('click', function(){$('.context-menu').hide()})
+    document.addEventListener('click', function(){
+      $('.context-menu').fadeOut(300)
+      $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
+    })
     $(selector).bind('contextmenu', function(e){ e.preventDefault(); return false; })
     if(document.querySelector('#context-menu-style') == null && style){ document.head.appendChild(menuStyles) }
     $(selector).each(function(ind, ele){
@@ -42,10 +45,10 @@
         $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         if( e.button == 2 ){ 
           $(ele).css({backgroundColor: highlight})
-          $(menu).css({display: 'inline-block'}).offset({top: e.pageY, left: e.pageX})
+          $(menu).css({display: 'inline-block'}).offset({top: e.pageY, left: e.pageX}).css({display: 'none'}).slideDown(300)
           bindMenuEvents(items, ele)
         }else{
-          $(menu).hide()
+          $(menu).fadeOut(300)
         }
       })
     })
@@ -62,7 +65,7 @@
       menuItems.each(function(ind, ele){
         var 
           itemID   = Math.round(Math.random(1000)*10000),
-          item     = $.create('li', {className: 'view clickable', id: 'context-menu-'+itemID+'-'+menuID}),
+          item     = $.create('li', {className: 'view clickable hover', id: 'context-menu-'+itemID+'-'+menuID}),
           styles   = (ele.icon ? {textAlign: 'center', marginRight: '10px', fontSize: '12px', width: '12px', display: 'inline-block'} : {textAlign: 'center', marginRight: '10px', opacity: 0, fontSize: '12px', width: '12px', display: 'inline-block'})
         ;
         if(ele.iconURL){
@@ -101,7 +104,7 @@
             left: $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
           })
         }).unbind('mouseleave').bind('mouseleave', function(){
-          $(subMenu).hide()
+          $(subMenu).fadeOut(300)
         })
         bindToElement.appendChild(subMenu)
       }
@@ -110,13 +113,16 @@
     function bindMenuEvents(menuItems, clicked){
       menuItems.each(function(index, menuItem){
         if(menuItem.condition && !menuItem.condition(clicked)){
-          $(menuItem.selector).hide(); return false
+          $(menuItem.selector).removeClass('hover').attr(
+            'disabled', 'disabled'
+          ).css({color: '#acacac'}).unbind('click')
+          return false;
         }else{
-          $(menuItem.selector).show()
+          $(menuItem.selector).addClass('hover').removeAttr('disabled').css({color: 'black'})
         }
         $(menuItem.selector).unbind('click').click(function(){
           if(menuItem.clickEvent){ menuItem.clickEvent(clicked) }
-          $(menuItem.selector).closest('.context-menu').hide()
+          $(menuItem.selector).closest('.context-menu').fadeOut(300)
           $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         })
         if(menuItem.menuItems){ bindMenuEvents(menuItem.menu, clicked) }
