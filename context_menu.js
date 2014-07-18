@@ -1,5 +1,16 @@
 (function($){
-  $.extend(Array.prototype, {each: function(yield){ for(var x = 0; x < this.length; x++){ if(typeof(yield(x, this[x])) == 'boolean'){ break }}}})
+  $.extend(Array.prototype, {
+    each: function(yield){ 
+      for(var x = 0; x < this.length; x++){ 
+        rVal = yield(x, this[x])
+        if(rVal == false){ 
+          break 
+        }else if(rVal == true){
+          continue
+        }
+      }
+    }
+  })
 
   $.create=function(tag, options){
     var options    = options||{}
@@ -116,7 +127,7 @@
           $(menuItem.selector).removeClass('hover').attr(
             'disabled', 'disabled'
           ).css({color: '#acacac'}).unbind('click')
-          return false;
+          return true;
         }else{
           $(menuItem.selector).addClass('hover').removeAttr('disabled').css({color: 'black'})
         }
