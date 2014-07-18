@@ -10,12 +10,14 @@
     </style>
   </head>
   <body>
-    <div id='demo' style="color:white; background:black; display:inline; padding:5px; font-weight:bold;">
+    <div id='demo' class="demo" style="color:white; background:black; display:inline; padding:5px; font-weight:bold;">
       Cogito igitur sum
     </div>
-
+    <div id='demo' class="demo" style="color:white; background:black; display:inline; padding:5px; font-weight:bold; float:right;">
+      Cogito igitur sum
+    </div>
     <script type="text/javascript">
-      $('#demo').contextMenu({
+      $('.demo').contextMenu({
         iconClass: 'fontawesome',
         highlight: 'black',
         items: [
