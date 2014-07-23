@@ -25,15 +25,17 @@
   }
 
   $.fn.contextMenu=function(opts){
+    opts           = opts||{}
+    opts.style     = opts.style||true
+    opts.items     = opts.items||[]
+    opts.iconClass = opts.iconClass||'icomoon'
+    opts.highlight = opts.highlight||"#E2E1FC"
+    opts.animate   = opts.animate||true
+    opts.animation = opts.animation||'slideDown'
+    opts.trigger   = opts.trigger||'rClick'
     var 
-      selector   = this,
-      opts       = opts||{},
-      style      = opts.style||true,
-      items      = opts.items||[],
-      iconClass  = opts.iconClass||'icomoon',
-      menu       = createMenu(items),
-      highlight  = opts.highlight||"#E2E1FC",
-      animate    = opts.animate||false
+      selector   = this.selector,
+      menu       = createMenu(opts.items)
       menuStyles = $.create('style', {
         type: 'text/css',
         id: 'context-menu-style',
@@ -45,29 +47,36 @@
         .context-menu ul li.hover:hover{ background:#acacac; }"
       })
     ;
-    document.addEventListener('click', function(){
-      $('.context-menu').fadeOut(300)
+    menu.opts = opts
+
+    document.addEventListener('click', function(e){
+      if($(e.target).selector != opts.selector){ hide(menu) }
       $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
     })
-    $(selector).bind('contextmenu', function(e){ e.preventDefault(); return false; })
-    if(document.querySelector('#context-menu-style') == null && style){ document.head.appendChild(menuStyles) }
+    if(opts.trigger == 'rClick'){$(selector).bind('contextmenu', function(e){ e.preventDefault(); return false; })}
+    if(document.querySelector('#context-menu-style') == null && opts.style){ document.head.appendChild(menuStyles) }
     $(selector).each(function(ind, ele){
       $(ele)[0].origBackground = $(ele).css('background-color')
       $(ele).mousedown(function(e){ 
         $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
-        if( e.button == 2 ){ 
-          $(ele).css({backgroundColor: highlight})
+        if((opts.trigger == 'rClick' && e.button == 2) || (opts.trigger == 'click' && e.button != 2)){ 
+          $(ele).css({backgroundColor: opts.highlight})
           $(menu).css({display: 'inline-block'})
-          var winWidth = window.innerWidth
-          var menuLeft = e.pageX+menu.offsetWidth
-          var left     = e.pageX
-          if(menuLeft>winWidth){ left -= menu.offsetWidth }
-          $(menu).offset({
-            top: e.pageY, left: left
-          }).css({display: 'none'}).slideDown(300)
-          bindMenuEvents(items, ele)
+          var winWidth   = window.innerWidth
+          var winHeight  = window.innerHeight
+          var menuRight  = e.pageX+menu.offsetWidth
+          var menuBottom = e.pageY+menu.offsetHeight
+          var left       = e.pageX
+          var top        = e.pageY
+          if(menuRight>winWidth){ left -= menu.offsetWidth }
+          if(menuBottom>winHeight){ top -= menu.offsetHeight }
+
+          show($(menu).offset({
+            top: top, left: left
+          }).css({display: 'none'}))
+          bindMenuEvents(opts.items, ele)
         }else{
-          $(menu).fadeOut(300)
+          hide(menu)
         }
       })
     })
@@ -89,17 +98,17 @@
           styles   = (ele.icon ? {textAlign: 'center', marginRight: '10px', fontSize: '12px', width: '12px', display: 'inline-block'} : {textAlign: 'center', marginRight: '10px', opacity: 0, fontSize: '12px', width: '12px', display: 'inline-block'})
         ;
         if(ele.iconURL){
-          var itemIcon = $.create('span', {className: iconClass, styles: {marginRight: '10px'}})
+          var itemIcon = $.create('span', {className: opts.iconClass, styles: {marginRight: '10px'}})
           itemIcon.appendChild($.create('img', {src: ele.iconURL, styles:{height:'12px', width:'12px'}}))
         }else{
-          var itemIcon = $.create('span', {className: iconClass, styles: styles, innerHTML: '&#x'+(ele.icon||ele.iconCode||'e6c1')+';'})
+          var itemIcon = $.create('span', {className: opts.iconClass, styles: styles, innerHTML: '&#x'+(ele.icon||ele.iconCode||'e6c1')+';'})
         }
         ele.selector = '#'+item.id
         item.appendChild(itemIcon)
         item.appendChild($.create('span', {innerHTML: ele.name}))
         if(ele.menu){ 
           var icon = $.create('span', {
-            className: iconClass, styles: {
+            className: opts.iconClass, styles: {
               position:'absolute', right: '3px', top: '50%', marginTop: '-5px',
               width: 0, height: 0, borderBottom: '5px solid transparent',
               borderTop: '5px solid transparent', borderLeft: '5px solid #acacac',
@@ -119,7 +128,7 @@
         return subMenu
       }else{
         $(bindToElement).unbind('mouseenter').bind('mouseenter', function(){
-          if(parent && parent.condition && parent.condition(bindToElement)){
+          if((parent && !!!parent.condition) || (parent && parent.condition && parent.condition(bindToElement))){
             $(subMenu).css({display: 'inline-block'})
             var winWidth  = window.innerWidth
             var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
@@ -131,7 +140,7 @@
             })
           }
         }).unbind('mouseleave').bind('mouseleave', function(){
-          $(subMenu).fadeOut(300)
+          hide(subMenu)
         })
         bindToElement.appendChild(subMenu)
       }
@@ -149,11 +158,37 @@
         }
         $(menuItem.selector).unbind('click').click(function(){
           if(menuItem.clickEvent){ menuItem.clickEvent(clicked) }
-          $(menuItem.selector).closest('.context-menu').fadeOut(300)
+          hide($(menuItem.selector).closest('.context-menu'))
           $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         })
         if(menuItem.menu){ bindMenuEvents(menuItem.menu, clicked) }
       })
+    }
+    //******************************************************
+    function hide(jqe){
+      if(opts.animate){
+        $(jqe).fadeOut(200)
+      }else{
+        $(jqe).hide()
+      }
+    }
+    //******************************************************
+    function show(jqe){
+      if(opts.animate){
+        switch(opts.animation){
+          case 'slideDown':
+            $(jqe).slideDown(200)
+            break;
+          case 'fade':
+            $(jqe).fadeIn(200)
+            break;
+          default:
+            $(jqe).slideDown(200)
+          break;
+        }
+      }else{
+        $(jqe).show()
+      }
     }
     return this
   }
