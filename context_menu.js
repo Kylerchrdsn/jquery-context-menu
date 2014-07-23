@@ -33,6 +33,7 @@
       iconClass  = opts.iconClass||'icomoon',
       menu       = createMenu(items),
       highlight  = opts.highlight||"#E2E1FC",
+      animate    = opts.animate||false
       menuStyles = $.create('style', {
         type: 'text/css',
         id: 'context-menu-style',
@@ -72,9 +73,10 @@
     })
     document.body.appendChild(menu)
     //******************************************************
-    function createMenu(menuItems, bindToElement){
+    function createMenu(menuItems, parent, bindToElement){
       var 
         bindToElement = bindToElement||null,
+        parent        = parent||null,
         menuID        = Math.round(Math.random(1000)*10000),
         subMenu       = $.create('div', {className: 'context-menu', id: 'context-menu-'+menuID, styles: {position: 'absolute'}}),
         list          = $.create('ul')
@@ -105,7 +107,7 @@
             }
           })
           item.appendChild(icon)
-          createMenu(ele.menu, item) 
+          createMenu(ele.menu, ele, item) 
         }
         list.appendChild(item)
       })
@@ -117,15 +119,17 @@
         return subMenu
       }else{
         $(bindToElement).unbind('mouseenter').bind('mouseenter', function(){
-          $(subMenu).css({display: 'inline-block'})
-          var winWidth  = window.innerWidth
-          var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
-          var left      = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
-          if(winWidth<menuright){ left -= ($(bindToElement)[0].offsetWidth+subMenu.offsetWidth) }
-          $(subMenu).offset({
-            top: $(bindToElement).offset().top, 
-            left: left
-          })
+          if(parent && parent.condition && parent.condition(bindToElement)){
+            $(subMenu).css({display: 'inline-block'})
+            var winWidth  = window.innerWidth
+            var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
+            var left      = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
+            if(winWidth<menuright){ left -= ($(bindToElement)[0].offsetWidth+subMenu.offsetWidth) }
+            $(subMenu).offset({
+              top: $(bindToElement).offset().top, 
+              left: left
+            })
+          }
         }).unbind('mouseleave').bind('mouseleave', function(){
           $(subMenu).fadeOut(300)
         })
@@ -148,7 +152,7 @@
           $(menuItem.selector).closest('.context-menu').fadeOut(300)
           $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
         })
-        if(menuItem.menuItems){ bindMenuEvents(menuItem.menu, clicked) }
+        if(menuItem.menu){ bindMenuEvents(menuItem.menu, clicked) }
       })
     }
     return this
