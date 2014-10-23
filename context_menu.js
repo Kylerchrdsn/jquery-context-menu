@@ -1,10 +1,10 @@
 (function($){
   $.extend(Array.prototype, {
-    each: function(yield){ 
-      for(var x = 0; x < this.length; x++){ 
+    each: function(yield){
+      for(var x = 0; x < this.length; x++){
         rVal = yield(x, this[x])
-        if(rVal == false){ 
-          break 
+        if(rVal == false){
+          break
         }else if(rVal == true){
           continue
         }
@@ -33,7 +33,7 @@
     opts.animate   = opts.animate||true
     opts.animation = opts.animation||'slideDown'
     opts.trigger   = opts.trigger||'rClick'
-    var 
+    var
       selector   = this.selector,
       menu       = createMenu(opts.items)
       menuStyles = $.create('style', {
@@ -56,18 +56,21 @@
     if(opts.trigger == 'rClick'){$(selector).bind('contextmenu', function(e){ e.preventDefault(); return false; })}
     if(document.querySelector('#context-menu-style') == null && opts.style){ document.head.appendChild(menuStyles) }
     $(selector).each(function(ind, ele){
+      $(ele).css('cursor', 'context-menu'); // Change cursor to context menu. Added by shosang.
       $(ele)[0].origBackground = $(ele).css('background-color')
-      $(ele).mousedown(function(e){ 
+      $(ele).mousedown(function(e){
         $(selector).each(function(x, y){ $(y).css({backgroundColor: $(y)[0].origBackground}) })
-        if((opts.trigger == 'rClick' && e.button == 2) || (opts.trigger == 'click' && e.button != 2)){ 
+        if((opts.trigger == 'rClick' && e.button == 2) || (opts.trigger == 'click' && e.button != 2)){
           $(ele).css({backgroundColor: opts.highlight})
           $(menu).css({display: 'inline-block'})
-          var winWidth   = window.innerWidth
-          var winHeight  = window.innerHeight
-          var menuRight  = e.pageX+menu.offsetWidth
-          var menuBottom = e.pageY+menu.offsetHeight
-          var left       = e.pageX
-          var top        = e.pageY
+          var
+            winWidth   = window.innerWidth,
+            winHeight  = window.innerHeight,
+            menuRight  = e.pageX+menu.offsetWidth,
+            menuBottom = e.clientY+menu.offsetHeight,
+            left       = e.pageX,
+            top        = e.pageY
+          ;
           if(menuRight>winWidth){ left -= menu.offsetWidth }
           if(menuBottom>winHeight){ top -= menu.offsetHeight }
 
@@ -83,7 +86,7 @@
     document.body.appendChild(menu)
     //******************************************************
     function createMenu(menuItems, parent, bindToElement){
-      var 
+      var
         bindToElement = bindToElement||null,
         parent        = parent||null,
         menuID        = Math.round(Math.random(1000)*10000),
@@ -92,7 +95,7 @@
       ;
 
       menuItems.each(function(ind, ele){
-        var 
+        var
           itemID   = Math.round(Math.random(1000)*10000),
           item     = $.create('li', {className: 'view clickable hover', id: 'context-menu-'+itemID+'-'+menuID}),
           styles   = (ele.icon ? {textAlign: 'center', marginRight: '10px', fontSize: '12px', width: '12px', display: 'inline-block'} : {textAlign: 'center', marginRight: '10px', opacity: 0, fontSize: '12px', width: '12px', display: 'inline-block'})
@@ -106,7 +109,7 @@
         ele.selector = '#'+item.id
         item.appendChild(itemIcon)
         item.appendChild($.create('span', {innerHTML: ele.name}))
-        if(ele.menu){ 
+        if(ele.menu){
           var icon = $.create('span', {
             className: opts.iconClass, styles: {
               position:'absolute', right: '3px', top: '50%', marginTop: '-5px',
@@ -116,7 +119,7 @@
             }
           })
           item.appendChild(icon)
-          createMenu(ele.menu, ele, item) 
+          createMenu(ele.menu, ele, item)
         }
         list.appendChild(item)
       })
@@ -128,17 +131,15 @@
         return subMenu
       }else{
         $(bindToElement).unbind('mouseenter').bind('mouseenter', function(){
-          if((parent && !!!parent.condition) || (parent && parent.condition && parent.condition(bindToElement))){
-            $(subMenu).css({display: 'inline-block'})
-            var winWidth  = window.innerWidth
-            var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
-            var left      = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
-            if(winWidth<menuright){ left -= ($(bindToElement)[0].offsetWidth+subMenu.offsetWidth) }
-            $(subMenu).offset({
-              top: $(bindToElement).offset().top, 
-              left: left
-            })
-          }
+          $(subMenu).css({display: 'inline-block'})
+          var winWidth  = window.innerWidth
+          var menuright = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth+subMenu.offsetWidth
+          var left      = $(bindToElement).offset().left+$(bindToElement)[0].offsetWidth
+          if(winWidth<menuright){ left -= ($(bindToElement)[0].offsetWidth+subMenu.offsetWidth) }
+          $(subMenu).offset({
+            top: $(bindToElement).offset().top,
+            left: left
+          })
         }).unbind('mouseleave').bind('mouseleave', function(){
           hide(subMenu)
         })
@@ -147,14 +148,27 @@
     }
     //******************************************************
     function bindMenuEvents(menuItems, clicked){
+      function toggleChildren(children, toggle){
+        children.each(function(x, child){
+          if(toggle){
+            $(child.selector).removeAttr('disabled').css({color: 'black'})
+          }else{
+            $(child.selector).attr(
+              'disabled', 'disabled'
+            ).css({color: '#acacac'}).unbind('click')
+          }
+        })
+      }
       menuItems.each(function(index, menuItem){
         if(menuItem.condition && !menuItem.condition(clicked)){
           $(menuItem.selector).removeClass('hover').attr(
             'disabled', 'disabled'
           ).css({color: '#acacac'}).unbind('click')
+          if(menuItem.menu){ toggleChildren(menuItem.menu, false) }
           return true;
         }else{
           $(menuItem.selector).addClass('hover').removeAttr('disabled').css({color: 'black'})
+          if(menuItem.menu){ toggleChildren(menuItem.menu, true) }
         }
         $(menuItem.selector).unbind('click').click(function(){
           if(menuItem.clickEvent){ menuItem.clickEvent(clicked) }
